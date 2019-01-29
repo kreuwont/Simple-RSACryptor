@@ -13,8 +13,8 @@ namespace RSACryptor
         private const Length RecommendKeyLength = 2048;
 
         private int _keyLength;
-        private byte[] _publicKey;
-        private byte[] _privateKey;
+        private SafeString _publicKey;
+        private SafeString _privateKey;
 
         [SecuritySafeCritical]
         public RSACrypt() : this(RecommendKeyLength)
@@ -37,8 +37,8 @@ namespace RSACryptor
             ClearKey();
             using (var provider = new RSACryptoServiceProvider(_keyLength))
             {
-                _publicKey = provider.ExportCspBlob(false);
-                _privateKey = provider.ExportCspBlob(true);
+                _publicKey = new SafeString(provider.ExportCspBlob(false));
+                _privateKey = new SafeString(provider.ExportCspBlob(true));
             }
         }
 
@@ -49,7 +49,8 @@ namespace RSACryptor
 
             using (var rsaProvider = new RSACryptoServiceProvider(_keyLength))
             {
-                rsaProvider.ImportCspBlob(_publicKey);
+                using (var keyBuffer = _publicKey.GetSafeBuffer())
+                    rsaProvider.ImportCspBlob(keyBuffer.GetBuffer());
 
                 int maxLength = (_keyLength - 384) / 8 + 37;
                 int dataLength = buffer.Length;
@@ -79,7 +80,8 @@ namespace RSACryptor
             {
                 try
                 {
-                    rsaProvider.ImportCspBlob(_privateKey);
+                    using (var keyBuffer = _privateKey.GetSafeBuffer())
+                        rsaProvider.ImportCspBlob(keyBuffer.GetBuffer());
 
                     int maxLength = _keyLength / 8;
                     int dataLength = buffer.Length;
@@ -107,12 +109,12 @@ namespace RSACryptor
         }
 
         [SecuritySafeCritical]
-        public Buff[] ExportKey(bool isPrivate)
+        public ManagedSafeBuffer ExportKey(bool isPrivate)
         {
             if (isPrivate)
-                return _privateKey;
+                return _privateKey.GetSafeBuffer();
             else
-                return _publicKey;
+                return _publicKey.GetSafeBuffer();
         }
 
         [SecuritySafeCritical]
@@ -130,13 +132,13 @@ namespace RSACryptor
 
             if (isPrivate)
             {
-                _privateKey = new byte[key.Length];
-                Array.Copy(key, 0, _privateKey, 0, key.Length);
+                _privateKey?.Dispose();
+                _privateKey = new SafeString(key);
             }
             else
             {
-                _publicKey = new byte[key.Length];
-                Array.Copy(key, 0, _publicKey, 0, key.Length);
+                _publicKey?.Dispose();
+                _publicKey = new SafeString(key);
             }
         }
 
@@ -149,17 +151,11 @@ namespace RSACryptor
         [SecuritySafeCritical]
         private void ClearKey()
         {
-            if (_privateKey != null)
-            {
-                Array.Clear(_privateKey, 0, _privateKey.Length);
-                _privateKey = null;
-            }
+            _privateKey?.Dispose();
+            _privateKey = null;
 
-            if (_publicKey != null)
-            {
-                Array.Clear(_publicKey, 0, _publicKey.Length);
-                _publicKey = null;
-            }
+            _publicKey?.Dispose();
+            _publicKey = null;
         }
 
         public void Dispose()

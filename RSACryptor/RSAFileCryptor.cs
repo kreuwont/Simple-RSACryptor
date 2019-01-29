@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RSACryptor
@@ -77,18 +74,24 @@ namespace RSACryptor
 
                 if (Convert.ToBoolean(saveInfoFlag & DataTypeFlag.PublicKey))
                 {
-                    var key = provider.ExportKey(false);
-                    bw.Write((byte)Opcode.PublicKey);
-                    bw.Write(key.Length);
-                    bw.Write(key);
+                    using (var key = provider.ExportKey(false))
+                    {
+                        var keyBuffer = key.GetBuffer();
+                        bw.Write((byte)Opcode.PublicKey);
+                        bw.Write(keyBuffer.Length);
+                        bw.Write(keyBuffer);
+                    }
                 }
 
                 if (Convert.ToBoolean(saveInfoFlag & DataTypeFlag.PrivateKey))
                 {
-                    var key = provider.ExportKey(true);
-                    bw.Write((byte)Opcode.PrivateKey);
-                    bw.Write(key.Length);
-                    bw.Write(key);
+                    using (var key = provider.ExportKey(true))
+                    {
+                        var keyBuffer = key.GetBuffer();
+                        bw.Write((byte)Opcode.PrivateKey);
+                        bw.Write(keyBuffer.Length);
+                        bw.Write(keyBuffer);
+                    }
                 }
             }
         }
@@ -114,14 +117,12 @@ namespace RSACryptor
                             break;
 
                         case Opcode.PublicKey:
-                            if (publicKey == null
-                                && Convert.ToBoolean(saveTypeFlag & DataTypeFlag.PublicKey))
+                            if (publicKey == null)
                                 publicKey = br.ReadBytes(br.ReadInt32());
                             break;
 
                         case Opcode.PrivateKey:
-                            if (privateKey == null
-                                && Convert.ToBoolean(saveTypeFlag & DataTypeFlag.PrivateKey))
+                            if (privateKey == null)
                                 privateKey = br.ReadBytes(br.ReadInt32());
                             break;
 
