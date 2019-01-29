@@ -17,13 +17,15 @@ namespace RSACryptor.Tests
         public async Task FileCryptor_File_CryptDecrypt(string text)
         {
             var fileName = "text.txt";
+            var keysFileName = "keys.key";
             File.WriteAllText(fileName, text);
 
-            await RSAFileCryptor.EncryptFileAsync(fileName, "keys.key", DataTypeFlag.PublicKey | DataTypeFlag.PrivateKey);
-            await RSAFileCryptor.DecryptFileAsync(fileName, "keys.key");
+            await RSAFileCryptor.EncryptFileAsync(fileName, keysFileName, DataTypeFlag.PublicKey | DataTypeFlag.PrivateKey);
+            await RSAFileCryptor.DecryptFileAsync(fileName, keysFileName);
 
             var textContent = File.ReadAllText(fileName);
             File.Delete(fileName);
+            File.Delete(keysFileName);
 
             Assert.AreEqual(textContent, text);
         }
@@ -32,12 +34,17 @@ namespace RSACryptor.Tests
         [DataRow("512kb.txt")]
         public async Task FileCryptor_BigFile_CryptDecrypt(string fileName)
         {
-            var text = File.ReadAllText(fileName);
+            var keysFileName = "keys.key";
+            var newFileName = "test_data.txt";
+            File.Copy(fileName, newFileName);
+            var text = File.ReadAllText(newFileName);
+            
+            await RSAFileCryptor.EncryptFileAsync(newFileName, keysFileName, DataTypeFlag.PublicKey | DataTypeFlag.PrivateKey);
+            await RSAFileCryptor.DecryptFileAsync(newFileName, keysFileName);
 
-            await RSAFileCryptor.EncryptFileAsync(fileName, "keys.key", DataTypeFlag.PublicKey | DataTypeFlag.PrivateKey);
-            await RSAFileCryptor.DecryptFileAsync(fileName, "keys.key");
-
-            var textContent = File.ReadAllText(fileName);
+            var textContent = File.ReadAllText(newFileName);
+            File.Delete(newFileName);
+            File.Delete(keysFileName);
 
             Assert.AreEqual(textContent, text);
         }
