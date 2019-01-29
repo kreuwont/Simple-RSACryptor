@@ -43,6 +43,7 @@ namespace RSACryptor
 
             var encodeString = Encoding.ASCII.GetString(encodeBuffer, 0, (int)(p - ptr));
             ClearBuffer(encodeBuffer);
+
             _safeBuffer = Convert.FromBase64String(encodeString);
             DeleteString(ref encodeString);
         }

@@ -28,9 +28,6 @@ namespace RSACryptor
             GenerateKey();
         }
 
-        /// <summary>
-        /// Генерирует новые приватный и публичный ключи
-        /// </summary>
         [SecuritySafeCritical]
         public void GenerateKey()
         {
@@ -78,30 +75,23 @@ namespace RSACryptor
             List<byte> retnBuff = new List<byte>();
             using (var rsaProvider = new RSACryptoServiceProvider(_keyLength))
             {
-                try
+                using (var keyBuffer = _privateKey.GetSafeBuffer())
+                    rsaProvider.ImportCspBlob(keyBuffer.GetBuffer());
+
+                int maxLength = _keyLength / 8;
+                int dataLength = buffer.Length;
+                int iterations = dataLength == maxLength ? 1 : dataLength / maxLength;
+                for (int i = 0; i < iterations; i++)
                 {
-                    using (var keyBuffer = _privateKey.GetSafeBuffer())
-                        rsaProvider.ImportCspBlob(keyBuffer.GetBuffer());
+                    byte[] tempBytes = new byte[
+                            (dataLength - maxLength * i > maxLength) ? maxLength :
+                                                          dataLength - maxLength * i];
+                    Buffer.BlockCopy(buffer, maxLength * i, tempBytes, 0,
+                                      tempBytes.Length);
 
-                    int maxLength = _keyLength / 8;
-                    int dataLength = buffer.Length;
-                    int iterations = dataLength == maxLength ? 1 : dataLength / maxLength;
-                    for (int i = 0; i < iterations; i++)
-                    {
-                        byte[] tempBytes = new byte[
-                                (dataLength - maxLength * i > maxLength) ? maxLength :
-                                                              dataLength - maxLength * i];
-                        Buffer.BlockCopy(buffer, maxLength * i, tempBytes, 0,
-                                          tempBytes.Length);
+                    byte[] decryptedBuffer = rsaProvider.Decrypt(tempBytes, false);
 
-                        byte[] decryptedBuffer = rsaProvider.Decrypt(tempBytes, false);
-
-                        retnBuff.AddRange(decryptedBuffer);
-                    }
-                }
-                catch (CryptographicException)
-                {
-                    throw;
+                    retnBuff.AddRange(decryptedBuffer);
                 }
             }
 
@@ -111,23 +101,19 @@ namespace RSACryptor
         [SecuritySafeCritical]
         public ManagedSafeBuffer ExportKey(bool isPrivate)
         {
-            if (isPrivate)
-                return _privateKey.GetSafeBuffer();
-            else
-                return _publicKey.GetSafeBuffer();
+            return isPrivate ? _privateKey.GetSafeBuffer() : _publicKey.GetSafeBuffer();
         }
 
         [SecuritySafeCritical]
         public void ImportKey(Length keyLength, Buff[] key, bool isPrivate)
         {
             if (keyLength == 0 || keyLength % 2 != 0)
-                throw new ArgumentException("Некорректный размер ключа");
+                throw new ArgumentException("Incorrect key size");
 
             if (key == null)
-                throw new ArgumentNullException($"{nameof(key)} не может быть равно null");
+                throw new ArgumentNullException($"{nameof(key)} mustn`t be null");
 
             _keyLength = keyLength;
-
             ClearKey();
 
             if (isPrivate)
@@ -143,10 +129,7 @@ namespace RSACryptor
         }
 
         [SecuritySafeCritical]
-        public Length ExportKeyLenght()
-        {
-            return _keyLength;
-        }
+        public Length ExportKeyLenght() => _keyLength;
 
         [SecuritySafeCritical]
         private void ClearKey()
@@ -158,9 +141,6 @@ namespace RSACryptor
             _publicKey = null;
         }
 
-        public void Dispose()
-        {
-            ClearKey();
-        }
+        public void Dispose() => ClearKey();
     }
 }

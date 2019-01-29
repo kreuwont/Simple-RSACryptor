@@ -53,7 +53,6 @@ namespace RSACryptor
             catch
             {
                 sb.Dispose();
-                sb = null;
                 throw;
             }
             finally

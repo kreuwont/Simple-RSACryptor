@@ -4,7 +4,7 @@ namespace RSACryptor
 {
     public static class Util
     {
-        public unsafe static void Memset(this byte[] buffer, int position, int length, byte val)
+        public static unsafe void Memset(this byte[] buffer, int position, int length, byte val)
         {
             if (position >= length)
                 throw new ArgumentException($"{nameof(position)} must be lower {nameof(length)}");
