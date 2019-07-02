@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSACryptor", "RSACryptor\RS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSACryptor.Tests", "RSACryptor.Tests\RSACryptor.Tests.csproj", "{3D967934-5C98-4459-8DB4-B92C3DC7FC73}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestData", "SharedProject1\TestData.shproj", "{B93BC4CA-1CB6-4F31-9C4C-79521D1D7399}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestData", "TestData\TestData.shproj", "{B93BC4CA-1CB6-4F31-9C4C-79521D1D7399}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		SharedProject1\SharedProject1.projitems*{b93bc4ca-1cb6-4f31-9c4c-79521d1d7399}*SharedItemsImports = 13
+		TestData\TestData.projitems*{b93bc4ca-1cb6-4f31-9c4c-79521d1d7399}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
